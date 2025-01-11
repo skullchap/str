@@ -7,6 +7,7 @@ str*	newstr(char* cstr);
 void	freestr(str *s);
 char*	cstr(str *s);
 long	strn(str *s);
+str*    strcopy(str *s);
 str*	strize(str *s, long n);		/* str resize */
 
 void	strallocfn(void*(*)(unsigned long));

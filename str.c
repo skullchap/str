@@ -57,6 +57,7 @@ void	strallocfn(void *(*fn)(unsigned long))		{allocf=fn;}
 void	strdeallocfn(void (*fn)(void*))			{deallocf=fn;}
 void	strreallocfn(void *(*fn)(void *, ulong))	{realocf = fn;}
 
+str*	strcopy(str *s)	{return newstrn(cstr(s), strn(s));}
 str*
 strize(str *s, long n)
 {

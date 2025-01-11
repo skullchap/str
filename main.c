@@ -26,6 +26,9 @@ main(void)
         s[4] = STR("QWERTY"), s[5] = STR("QWERTY");
         printf("comparing '%s' and '%s' using strcmp, (%d)\n", s[4], s[5], strcmp(s[4], s[5]));
 
+        s[5] = strcopy(s[4]);
+        printf("%s (%d)\n", s[5], strn(s[5]));
+        
         p=s;
         while(*p){
                 freestr(*p);
