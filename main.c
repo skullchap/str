@@ -23,11 +23,15 @@ main(void)
         s[3] = STR("こんにちは world 😁");
         printf("%s (%d), runen (%d)\n", s[3], strn(s[3]), runen(s[3]));
 
-        s[4] = STR("QWERTY"), s[5] = STR("QWERTY");
+        s[4] = STR("QWERTY");
+        s[5] = STR("QWERTY");
         printf("comparing '%s' and '%s' using strcmp, (%d)\n", s[4], s[5], strcmp(s[4], s[5]));
 
-        s[5] = strcopy(s[4]);
-        printf("%s (%d)\n", s[5], strn(s[5]));
+        s[6] = strcopy(s[5]);
+        printf("%s (%d)\n", s[6], strn(s[6]));
+
+        s[7] = sreadfile("main.c");
+        printf("%s\n(%d)\n", s[7], strn(s[7]));
         
         p=s;
         while(*p){

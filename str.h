@@ -9,6 +9,7 @@ char*	cstr(str *s);
 long	strn(str *s);
 str*    strcopy(str *s);
 str*	strize(str *s, long n);		/* str resize */
+str*    sreadfile(char *fpath);
 
 void	strallocfn(void*(*)(unsigned long));
 void	strdeallocfn(void(*)(void*));

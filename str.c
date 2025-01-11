@@ -4,6 +4,15 @@
 
 typedef unsigned char uchar;
 typedef unsigned long ulong;
+typedef struct FILE FILE;
+enum	{SEEK_END=	2};
+
+FILE*	fopen(const char*, const char*);
+ulong	fread(void*, ulong, ulong, FILE*);
+int	fseek(FILE*, long, int);
+long	ftell(FILE*);
+void	rewind(FILE*);
+int	fclose(FILE*);
 
 void*	malloc(ulong);
 void	free(void*);
@@ -68,6 +77,36 @@ strize(str *s, long n)
 	s->n=n;
 	term(s);
 	return (str*)STREND(s);
+}
+
+str*
+sreadfile(char *fpath)
+{
+	FILE *f;
+	long n;
+	str *s;
+
+	f = fopen(fpath, "rb");
+	if(!f)
+		return 0;
+	fseek(f, 0, SEEK_END);
+	n = ftell(f);
+	rewind(f);
+
+	s = allocstr(n);
+	if(!s)
+		goto cleanup;
+
+	n = fread(STREND(s), 1, n, f);
+	if(n < 0)
+		goto cleanup;
+
+	fclose(f);
+	return (str*)STREND(s);
+cleanup:
+	fclose(f);
+	freestr(s);
+	return 0;
 }
 
 str*
