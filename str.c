@@ -17,16 +17,19 @@ void*	malloc(ulong);
 void	free(void*);
 void*	realloc(void*, ulong);
 void*	memcpy(void*, void*, ulong);
-ulong	strlen(char *);
+void*	memchr(void*, int, ulong);
+int	memcmp(void*, void*, ulong);
+ulong	strlen(char*);
 int	strcmp(char*, char*);
 
-void*(*allocf)(ulong) = malloc;
-void(*deallocf)(void*) = free;
-void*(*realocf)(void*, ulong) = realloc;
+static	void*(*allocf)(ulong)=  	malloc;
+static	void(*deallocf)(void*)= 	free;
+static	void*(*realocf)(void*, ulong)=	realloc;
 
 struct str
 {
-	long n, runen;
+	rune	*rs;
+	long	runen, n;
 };
 
 #define cast(T,V)	((T)(V))
@@ -42,8 +45,9 @@ allocstr(long n)		/* not reusing reallocstr, cause custom global realocfn can ac
 	str *s = allocf(sizeof(str)+ n + 1);
 	if(!s)
 		return 0;
-	s->n=n;
+	s->rs=0;
 	s->runen=0;
+	s->n=n;
 	term(s);
 	return (str*)STREND(s);
 }
@@ -56,8 +60,9 @@ reallocstr(str *s, long n)
 	if(!p)
 		return 0;
 	s=p;
-	s->n=n;
+	s->rs=0;
 	s->runen=0;
+	s->n=n;
 	term(s);
 	return (str*)STREND(s);
 }
@@ -73,7 +78,8 @@ newstrn(char* cstr, long n)
 }
 
 str*	newstr(char *cstr)	{return newstrn(cstr, strlen(cstr)+1);}
-void	freestr(str *s)		{free(STRSTART(s));}
+void	freestr(str *s)		{nilrunes(s); free(STRSTART(s));}
+void	nilrunes(str *s)	{s=(str*)STRSTART(s); free(s->rs); s->rs=0; s->runen=0;}
 char*	cstr(str *s)		{return (char*)s;}
 long	strn(str *s)		{return ((str*)STRSTART(s))->n;}
 
@@ -81,7 +87,7 @@ void	strallocfn(void *(*fn)(unsigned long))		{allocf=fn;}
 void	strdeallocfn(void (*fn)(void*))			{deallocf=fn;}
 void	strreallocfn(void *(*fn)(void *, ulong))	{realocf = fn;}
 
-str*	scopy(str *s)		{return newstrn(cstr(s), strn(s));}
+str*	sdup(str *s)		{return newstrn(cstr(s), strn(s));}
 str*	sresize(str *s, long n)	{return reallocstr(s, n);}
 
 str*
@@ -117,13 +123,6 @@ cleanup:
 str*
 scat(str *l, str *r)
 {
-/* 	str *s = allocstr(strn(l) + strn(r));
-	if(!s)
-		return 0;
-	memcpy(s, l, strn(l));
-	memcpy(cast(uchar*, s)+ strn(l), r, strn(r));
-	return s; */
-
 	str *sa[2];
 	sa[0]= l, sa[1]= r;
 	return scatn(sa, 2);
@@ -152,28 +151,70 @@ scatn(str *sa[], int n)
 
 int	scmp(str *l, str *r)	{return strcmp((char*)l, (char*)r);}
 
-long
-runen(str *s)
+int
+runew(rune r)
 {
-	long runen = cast(str*, STRSTART(s))->runen;
+	uchar b = *(uchar*)&r;
+	if((b & 0x80) == 0){
+		return 1;
+	}else if((b & 0xE0) == 0xC0){
+		return 2;
+	}else if((b & 0xF0) == 0xE0){
+		return 3;
+	}else if((b & 0xF8) == 0xF0){
+		return 4;
+	}
+	return -1;
+}
+
+rune*
+runes(str *s)
+{
+	s = (str*)STRSTART(s);
+
+	if(s->rs)
+		return s->rs;
+	runesn((str*)STREND(s));
+	return s->rs;
+}
+
+long
+runesn(str *s)
+{
+	long runen, rscap;
 	uchar *p = (uchar *)s;
+	s = (str*)STRSTART(s);
+	runen = s->runen;
 
 	if(runen > 0)
 		return runen;
 
+	runen=0, rscap=2;
+	s->rs = allocf(sizeof(rune)*rscap);
+	if(!s->rs)
+		goto bad;
+
 	while(*p != '\0'){
-		uchar b = *p;
-		if((b & 0x80) == 0){
-			p += 1;
-		}else if((b & 0xE0) == 0xC0){
-			p += 2;
-		}else if((b & 0xF0) == 0xE0){
-			p += 3;
-		}else if((b & 0xF8) == 0xF0){
-			p += 4;
+		rune r = *(rune*)p;
+		int w = runew(r);
+		if(w < 0)
+			goto bad;
+		p+=w;
+
+		if(runen == rscap){
+			void *nrs;
+			rscap*=2;
+			nrs = realocf(s->rs, sizeof(rune)*rscap);
+			if(!nrs)
+				goto bad;
+			s->rs=nrs;
 		}
-		runen++;
+		s->rs[runen++] = r;
 	}
-	cast(str*, STRSTART(s))->runen = runen;
+	s->runen = runen;
 	return runen;
+bad:
+	deallocf(s->rs);
+	s->runen=0;
+	return -1;
 }

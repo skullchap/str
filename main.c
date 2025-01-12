@@ -7,6 +7,8 @@ main(void)
 {
         str* s[64] = {0};
         str **p;
+        int i; long n;
+        rune *r;
 
         s[0] = str("Ass");
         s[1] = str(" Dick");
@@ -21,14 +23,14 @@ main(void)
         printf("%s (%d)\n", s[2], strn(s[2]));
 
         s[3] = str("こんにちは world 😁");
-        printf("%s (%d), runen (%d)\n", s[3], strn(s[3]), runen(s[3]));
-        printf("repeat cached runen (%d)\n", runen(s[3]));
+        printf("%s (%d), runen (%d)\n", s[3], strn(s[3]), runesn(s[3]));
+        printf("repeat cached runen (%d)\n", runesn(s[3]));
 
         s[4] = str("QWERTY");
         s[5] = str("QWERTY");
         printf("comparing '%s' and '%s' using strcmp, (%d)\n", s[4], s[5], strcmp(s[4], s[5]));
 
-        s[6] = scopy(s[5]);
+        s[6] = sdup(s[5]);
         printf("%s (%d)\n", s[6], strn(s[6]));
 
         s[7] = sreadfile("main.c");
@@ -36,6 +38,24 @@ main(void)
 
         s[8] = scatn(s, 4);
         printf("%s (%d)\n", s[8], strn(s[8]));
+
+        r = runes(s[3]);
+        n = runesn(s[3]);
+        printf("%s\n", s[3]);
+        for(i=0; i<n; ++i){
+                printf("%d ", runew(r[i]));
+        }
+        puts("");
+
+        nilrunes(s[3]);
+        
+        r = runes(s[3]);
+        n = runesn(s[3]);
+        printf("%s (%d)\n", s[3], n);
+        for(i=0; i<n; ++i){
+                printf("%d ", runew(r[i]));
+        }
+        puts("");
 
         p=s;
         while(*p){
