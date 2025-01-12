@@ -57,6 +57,9 @@ main(void)
         }
         puts("");
 
+        s[9] = runestostr(&r[4], n-4);
+        printf("%s (%d), runen (%d)\n", s[9], strn(s[9]), runesn(s[9]));
+
         p=s;
         while(*p){
                 freestr(*p);

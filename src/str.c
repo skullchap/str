@@ -1,6 +1,7 @@
 /* started 01.07.2025 - skullchap - MIT */
 
 #include "str.h"
+#include "runedef.h"
 
 typedef unsigned char uchar;
 typedef unsigned long ulong;
@@ -21,6 +22,8 @@ void*	memchr(void*, int, ulong);
 int	memcmp(void*, void*, ulong);
 ulong	strlen(char*);
 int	strcmp(char*, char*);
+
+int	printf(char*, ...);
 
 static	void*(*allocf)(ulong)=  	malloc;
 static	void(*deallocf)(void*)= 	free;
@@ -154,17 +157,8 @@ int	scmp(str *l, str *r)	{return strcmp((char*)l, (char*)r);}
 int
 runew(rune r)
 {
-	uchar b = *(uchar*)&r;
-	if((b & 0x80) == 0){
-		return 1;
-	}else if((b & 0xE0) == 0xC0){
-		return 2;
-	}else if((b & 0xF0) == 0xE0){
-		return 3;
-	}else if((b & 0xF8) == 0xF0){
-		return 4;
-	}
-	return -1;
+	char p[4];
+	return runetochar(p, &r);
 }
 
 rune*
@@ -182,7 +176,7 @@ long
 runesn(str *s)
 {
 	long runen, rscap;
-	uchar *p = (uchar *)s;
+	char *p = (char *)s;
 	s = (str*)STRSTART(s);
 	runen = s->runen;
 
@@ -195,8 +189,8 @@ runesn(str *s)
 		goto bad;
 
 	while(*p != '\0'){
-		rune r = *(rune*)p;
-		int w = runew(r);
+		rune r;
+		int w = chartorune(&r, p);
 		if(w < 0)
 			goto bad;
 		p+=w;
@@ -217,4 +211,20 @@ bad:
 	deallocf(s->rs);
 	s->runen=0;
 	return -1;
+}
+
+str*
+runestostr(rune *rs, long n)
+{
+	long i, off;
+	str *s;
+	
+	s = allocstr(n *sizeof(rune));
+	if(!s)
+		return 0;
+
+	for(i=0,off=0; i<n; ++i)
+		off+=runetochar(cstr(s)+off, &rs[i]);
+
+	return sresize(s, off);
 }

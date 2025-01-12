@@ -28,3 +28,4 @@ int	runew(rune r);		/* rune width */
 rune*	runes(str *s);		/* get underlying rune array */
 long	runesn(str *s);
 void	nilrunes(str *s);
+str*	runestostr(rune *rs, long n);
